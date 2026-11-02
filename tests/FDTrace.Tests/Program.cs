@@ -1,13 +1,13 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
-using FastLogViewer;
+using FoxDeployTrace;
 
-namespace FastLogViewer.Tests;
+namespace FDTrace.Tests;
 
 internal static class Program
 {
-    private static readonly string TestDirectory = Path.Combine(Path.GetTempPath(), $"FastLogViewer-tests-{Guid.NewGuid():N}");
+    private static readonly string TestDirectory = Path.Combine(Path.GetTempPath(), $"FDTrace-tests-{Guid.NewGuid():N}");
     private static int _passed;
 
     [STAThread]
@@ -39,6 +39,7 @@ internal static class Program
             Run("Settings persistence and invalid settings errors", TestSettings);
             Run("File encodings, cancellation and open-for-writing logs", TestFileLoading);
             Run("Rules dialog add, remove, reorder and apply", TestRulesDialog);
+            Run("Embedded branding, About dialog, Help menu and links", TestAbout);
             Run("10 MB real UI load, selection, toggles, rules and reload", TestLargeFileUi);
             Run("Very long row has bounded preview and complete details", TestLongRowUi);
             Console.WriteLine($"PASS: {_passed} test groups.");
@@ -194,6 +195,85 @@ internal static class Program
         ClickButton(form, "Apply");
         Equal(2, form.Rules.Count);
         form.Close();
+    }
+
+    private static void TestAbout()
+    {
+        var openedLinks = new List<string>();
+        using (var about = new AboutForm(openedLinks.Add))
+        {
+            about.Show();
+            Application.DoEvents();
+            var logo = Find<PictureBox>(about, "AboutLogo");
+            Assert(logo.Image is { Width: > 0, Height: > 0 } && logo.Visible,
+                "About must render the embedded logo.");
+            Assert(about.Icon is not null, "About must use the app icon.");
+            Assert(Find<Label>(about, "AboutCopyright").Text.Contains("FoxDeploy / Stephen Owen"),
+                "About must display the copyright attribution.");
+            var blog = Find<LinkLabel>(about, "BlogLink");
+            var project = Find<LinkLabel>(about, "ProjectLink");
+            ClickLink(blog);
+            ClickLink(project);
+            Assert(openedLinks.SequenceEqual(new[]
+            {
+                "https://www.foxdeploy.com", "https://github.com/1RedOne/FoxDeploy-Trace"
+            }), "Both links must launch their actual destinations.");
+            Assert(blog.LinkVisited && project.LinkVisited, "Successful links must be marked visited.");
+            about.Close();
+        }
+
+        using (var about = new AboutForm(_ => throw new System.ComponentModel.Win32Exception("Browser unavailable")))
+        {
+            about.Show();
+            var blog = Find<LinkLabel>(about, "BlogLink");
+            ClickLink(blog);
+            Assert(Find<Label>(about, "AboutStatus").Text.Contains("Browser unavailable"),
+                "Browser launch errors must be visible.");
+            Assert(!blog.LinkVisited, "Failed links must not look successful.");
+            about.Close();
+        }
+
+        using var main = new MainForm(settingsPath: Path.Combine(TestDirectory, "about-settings.json"));
+        main.Show();
+        Application.DoEvents();
+        using var embeddedIcon = AppBranding.LoadIcon();
+        using var expected = embeddedIcon.ToBitmap();
+        using var actual = main.Icon!.ToBitmap();
+        Equal(expected.GetPixel(16, 16), actual.GetPixel(16, 16));
+        var toolbar = Find<ToolStrip>(main, "Toolbar");
+        var help = (ToolStripDropDownButton)toolbar.Items["HelpMenu"]!;
+        var aboutItem = help.DropDownItems["AboutMenuItem"]!;
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var shown = false;
+            using var closeAbout = new System.Windows.Forms.Timer { Interval = 100 };
+            closeAbout.Tick += (_, _) =>
+            {
+                var dialog = Application.OpenForms.OfType<AboutForm>().SingleOrDefault();
+                if (dialog is null || !dialog.Visible)
+                {
+                    return;
+                }
+                closeAbout.Stop();
+                Equal(main, dialog.Owner);
+                Assert(Find<PictureBox>(dialog, "AboutLogo").Image is not null,
+                    "Reopening About must retain a valid logo.");
+                shown = true;
+                ClickButton(dialog, "Close");
+            };
+            closeAbout.Start();
+            aboutItem.PerformClick();
+            Assert(shown, "Help > About must open an owned About dialog.");
+            Assert(!Application.OpenForms.OfType<AboutForm>().Any(), "Close must dismiss the modal dialog.");
+        }
+        main.Close();
+    }
+
+    private static void ClickLink(LinkLabel label)
+    {
+        var onLinkClicked = typeof(LinkLabel).GetMethod("OnLinkClicked",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        onLinkClicked.Invoke(label, [new LinkLabelLinkClickedEventArgs(label.Links[0])]);
     }
 
     private static void TestLargeFileUi()

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace FastLogViewer;
+namespace FoxDeployTrace;
 
 internal sealed record HighlightRule(string Text, string ColorName, bool Enabled = true);
 

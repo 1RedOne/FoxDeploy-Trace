@@ -3,9 +3,12 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <AssemblyName>FDTrace</AssemblyName>
+    <RootNamespace>FoxDeployTrace</RootNamespace>
     <Product>FDTrace</Product>
     <AssemblyTitle>FDTrace (FoxDeployTrace)</AssemblyTitle>
     <Description>FoxDeployTrace: ultra-speed, ultra-scale log file viewer.</Description>
+    <Copyright>Copyright (c) 2026 FoxDeploy / Stephen Owen</Copyright>
+    <ApplicationIcon>..\image\FDTrace.ico</ApplicationIcon>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
@@ -14,7 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="FastLogViewer.Tests" />
+    <InternalsVisibleTo Include="FDTrace.Tests" />
+    <EmbeddedResource Include="..\image\FdTraceLogo.png" LogicalName="FoxDeployTrace.Logo.png" />
+    <EmbeddedResource Include="..\image\FDTrace.ico" LogicalName="FoxDeployTrace.App.ico" />
   </ItemGroup>
 
 </Project>

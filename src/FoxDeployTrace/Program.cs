@@ -1,4 +1,4 @@
-namespace FastLogViewer;
+namespace FoxDeployTrace;
 
 static class Program
 {

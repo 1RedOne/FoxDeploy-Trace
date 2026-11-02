@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace FastLogViewer;
+namespace FoxDeployTrace;
 
 internal sealed class LogDocument
 {

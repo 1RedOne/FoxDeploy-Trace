@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 
-namespace FastLogViewer;
+namespace FoxDeployTrace;
 
 internal sealed class MainForm : Form
 {
@@ -15,6 +15,7 @@ internal sealed class MainForm : Form
     private readonly string _settingsPath;
     private readonly Dictionary<int, ListViewItem> _itemCache = [];
     private readonly Font _logFont = new("Consolas", 10);
+    private readonly Icon _appIcon = AppBranding.LoadIcon();
     private CancellationTokenSource? _loadCancellation;
     private LogDocument? _document;
     private string? _filePath;
@@ -22,9 +23,8 @@ internal sealed class MainForm : Form
 
     public MainForm(string? initialPath = null, string? settingsPath = null)
     {
-        // Keep existing highlight rules and preferences across the rebrand.
         _settingsPath = settingsPath ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FastLogViewer", "settings.json");
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FDTrace", "settings.json");
         try
         {
             _settings = DisplaySettings.Load(_settingsPath);
@@ -36,6 +36,7 @@ internal sealed class MainForm : Form
         }
 
         Text = "FDTrace";
+        Icon = _appIcon;
         ClientSize = new Size(1300, 820);
         MinimumSize = new Size(760, 480);
         StartPosition = FormStartPosition.CenterScreen;
@@ -71,6 +72,12 @@ internal sealed class MainForm : Form
         _hideNullGuids.CheckedChanged += (_, _) => ChangeDisplaySettings();
         toolbar.Items.AddRange([open, reload, new ToolStripSeparator(), rules,
             new ToolStripSeparator(), _hideIds, _hideNullGuids]);
+        var help = new ToolStripDropDownButton("&Help") { Name = "HelpMenu" };
+        var about = new ToolStripMenuItem("&About FDTrace...") { Name = "AboutMenuItem" };
+        about.Click += (_, _) => ShowAbout();
+        help.DropDownItems.Add(about);
+        toolbar.Items.Add(new ToolStripSeparator());
+        toolbar.Items.Add(help);
 
         _status = new ToolStripStatusLabel("Open or drop a log file to begin.")
         {
@@ -160,6 +167,11 @@ internal sealed class MainForm : Form
             {
                 e.SuppressKeyPress = true;
                 await LoadFileAsync(_filePath);
+            }
+            else if (e.KeyCode == Keys.F1)
+            {
+                e.SuppressKeyPress = true;
+                ShowAbout();
             }
         };
         Shown += async (_, _) =>
@@ -316,6 +328,12 @@ internal sealed class MainForm : Form
         }
     }
 
+    private void ShowAbout()
+    {
+        using var dialog = new AboutForm();
+        dialog.ShowDialog(this);
+    }
+
     private void RefreshRows()
     {
         _itemCache.Clear();
@@ -352,6 +370,7 @@ internal sealed class MainForm : Form
         if (disposing)
         {
             _logFont.Dispose();
+            _appIcon.Dispose();
         }
     }
 

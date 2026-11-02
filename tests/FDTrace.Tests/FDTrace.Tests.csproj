@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\FastLogViewer\FastLogViewer.csproj" />
+    <ProjectReference Include="..\..\src\FoxDeployTrace\FoxDeployTrace.csproj" />
   </ItemGroup>
 
 </Project>

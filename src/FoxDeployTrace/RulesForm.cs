@@ -1,4 +1,4 @@
-namespace FastLogViewer;
+namespace FoxDeployTrace;
 
 internal sealed class RulesForm : Form
 {
