@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>FDTrace</AssemblyName>
+    <Product>FDTrace</Product>
+    <AssemblyTitle>FDTrace (FoxDeployTrace)</AssemblyTitle>
+    <Description>FoxDeployTrace: ultra-speed, ultra-scale log file viewer.</Description>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FastLogViewer.Tests" />
+  </ItemGroup>
+
+</Project>
